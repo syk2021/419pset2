@@ -143,12 +143,10 @@ if __name__ == '__main__':
 
     try:
         port = int(port)
-        if port < 0:
+        if port < 0 or port > 65535:
             raise Exception
     except Exception as err:
-        print("Port can only can be a positive integer", file=stderr)
+        print("error: port must be an integer 0-65535", file=stderr)
         exit(1)
 
     LuxGUI(host, port)
-
-    # LuxGUI().connect_to_server(host, port, )

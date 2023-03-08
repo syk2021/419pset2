@@ -107,7 +107,7 @@ class Server():
         out_flo.write(response)
         out_flo.flush()
 
-        print(client_response)
+        print(client_response + "\n")
 
 
 if __name__ == '__main__':
@@ -125,10 +125,8 @@ if __name__ == '__main__':
     # make sure that port is valid
     try:
         port = int(port)
-        if port < 0:
-            raise Exception
     except Exception as err:
-        print("Port can only can be a positive integer", file=stderr)
+        print("error: port must be an integer 0-65535", file=stderr)
         exit(1)
 
     # starts the server with the port
