@@ -4,6 +4,7 @@ from contextlib import closing
 from sqlite3 import connect
 from datetime import datetime
 import json
+import sqlite3
 
 
 class NoSearchResultsError(Exception):

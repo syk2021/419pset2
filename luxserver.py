@@ -5,6 +5,7 @@ from os import name
 import argparse
 from query import LuxDetailsQuery, NoSearchResultsError
 import sys
+import sqlite3
 
 DB_NAME = "./lux.sqlite"
 
@@ -86,6 +87,9 @@ class Server():
         except NoSearchResultsError:
             response = "Invalid id\n"
             cilent_response = f"Wrote to client: invalid id"
+        except sqlite3.Error as err:
+            response = str(err) + "\n"
+            cilent_response = f"Wrote to client: {err}"
 
         # return the results of querying the database
         out_flo = sock.makefile(mode='w', encoding='utf-8')
