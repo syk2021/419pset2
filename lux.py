@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import QApplication, QFrame, QLabel, QListWidget
 from PySide6.QtWidgets import QMainWindow, QGridLayout, QPushButton, QLineEdit
 from PySide6.QtWidgets import QScrollBar, QListWidgetItem, QGridLayout
+from PySide6.QtCore import Qt
 from sys import exit, argv, stderr
 from socket import socket
 from dialog import FW_FONT, FixedWidthMessageDialog
@@ -103,6 +104,7 @@ class LuxGUI():
             strings.append(one_string)
             item = QListWidgetItem(one_string)
             item.setFont(FW_FONT)
+            item.setData(Qt.UserRole, row[0])
             self.list_widget.addItem(item)
 
         # can delete this for loop once search is working
@@ -121,6 +123,11 @@ class LuxGUI():
 
     def list_item_clicked(self, item):
         """When list item is double clicked, display dialog."""
+        selected_id = item.data(Qt.UserRole)
+        
+        data_dict = {"id": selected_id}
+        dialog_results = self.connect_to_server(data_dict)
+        print(dialog_results)
         FixedWidthMessageDialog("Title", "message").exec()
 
     def connect_to_server(self, data):
