@@ -17,10 +17,10 @@ class LuxGUI():
         self._host = host
         self._port = port
         self.app = QApplication(argv)
-        self.label = QLineEdit("Label")
-        self.classifier = QLineEdit("Classifier")
-        self.agent = QLineEdit("Agent")
-        self.department = QLineEdit("Department")
+        self.label = QLineEdit()
+        self.classifier = QLineEdit()
+        self.agent = QLineEdit()
+        self.department = QLineEdit()
         self.layout = QGridLayout()
         self.frame = QFrame()
         self.window = QMainWindow()
@@ -34,13 +34,24 @@ class LuxGUI():
         self.window.setCentralWidget(self.frame)
 
         # Add widgets to layout
-        self.layout.addWidget(search_button, 4, 0)
+        label_label = QLabel("Label:")
+        self.layout.addWidget(label_label, 0, 0)
+        self.layout.addWidget(self.label, 0, 1)
+
+        label_classifier = QLabel("Classifier:")
+        self.layout.addWidget(label_classifier, 1, 0)
+        self.layout.addWidget(self.classifier, 1, 1)
+
+        label_agent = QLabel("Agent:")
+        self.layout.addWidget(label_agent, 2, 0)
+        self.layout.addWidget(self.agent, 2, 1)
+
+        label_department = QLabel("Department:")
+        self.layout.addWidget(label_department, 3, 0)
+        self.layout.addWidget(self.department, 3, 1)
+
+        self.layout.addWidget(search_button, 4, 1)
         search_button.clicked.connect(lambda: self.search())
-        self.layout.addWidget(self.label, 0, 0)
-        self.layout.addWidget(self.classifier, 1, 0)
-        self.layout.addWidget(self.agent, 2, 0)
-        self.layout.addWidget(self.department, 3, 0)
-        # layout.addWidget(qlabel, 6, 0)
 
         # Sizing the screen
         screen_size = self.app.primaryScreen().availableGeometry()
@@ -80,14 +91,20 @@ class LuxGUI():
 
     def search(self):
         """Function that executes when user clicks search button"""
-        data_label = self.label.text()
-        data_classifier = self.classifier.text()
-        data_agent = self.agent.text()
-        data_department = self.department.text()
+        data_label = self.parse_label_data(self.label)
+        data_classifier = self.parse_label_data(self.classifier)
+        data_agent = self.parse_label_data(self.agent)
+        data_department = self.parse_label_data(self.department)
         data_dict = {"id": None, "label": data_label, "classifier": data_classifier,
                      "agt": data_agent, "dep": data_department}
         print(data_dict)
         self.connect_to_server(json.dumps(data_dict))
+
+    def parse_label_data(self, line_edit_object):
+        input_data = line_edit_object.text()
+        if input_data == "":
+            input_data = None
+        return input_data
 
     def connect_to_server(self, data):
         """Connect lux to server."""
