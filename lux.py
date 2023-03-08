@@ -9,9 +9,13 @@ from sys import exit, stderr
 
 import argparse
 
+
 class LuxGUI():
     """A GUI class for Lux."""
-    def __init__(self):
+
+    def __init__(self, host, port):
+        self._host = host
+        self._port = port
         self.app = QApplication(argv)
         self.label = QLineEdit("Label")
         self.classifier = QLineEdit("Classifier")
@@ -28,10 +32,10 @@ class LuxGUI():
         # set window title
         self.window.setWindowTitle("Window Title")
         self.window.setCentralWidget(self.frame)
-        
+
         # Add widgets to layout
         self.layout.addWidget(search_button, 4, 0)
-        search_button.clicked.connect(lambda: self.echo_search())
+        search_button.clicked.connect(lambda: self.search())
         self.layout.addWidget(self.label, 0, 0)
         self.layout.addWidget(self.classifier, 1, 0)
         self.layout.addWidget(self.agent, 2, 0)
@@ -50,7 +54,7 @@ class LuxGUI():
         item3 = QListWidgetItem("C")
         item4 = QListWidgetItem("D")
         item4 = QListWidgetItem("D")
-        item5= QListWidgetItem("D")
+        item5 = QListWidgetItem("D")
         item6 = QListWidgetItem("D")
         item7 = QListWidgetItem("D")
         item8 = QListWidgetItem("D")
@@ -65,31 +69,31 @@ class LuxGUI():
         listwidget.addItem(item7)
         listwidget.addItem(item8)
         listwidget.addItem(item9)
-        
+
         self.layout.addWidget(listwidget, 8, 0)
         scroll_bar = QScrollBar()
         scroll_bar.setStyleSheet("backgroundL lightgreen;")
         listwidget.addScrollBarWidget(scroll_bar, Qt.AlignLeft)
-            
+
         self.window.show()
         exit(self.app.exec())
-    
-    def echo_search(self):
+
+    def search(self):
         """Function that executes when user clicks search button"""
         data_label = self.label.text()
         data_classifier = self.classifier.text()
         data_agent = self.agent.text()
         data_department = self.department.text()
         data_dict = {"id": None, "label": data_label, "classifier": data_classifier,
-                        "agt": data_agent, "dep": data_department }
+                     "agt": data_agent, "dep": data_department}
         print(data_dict)
-        return json.dumps(data_dict)
+        self.connect_to_server(json.dumps(data_dict))
 
-    def connect_to_server(host, port, data):
+    def connect_to_server(self, data):
         """Connect lux to server."""
         try:
             with socket() as sock:
-                sock.connect((host, port))
+                sock.connect((self._host, self._port))
 
                 # write to the server
                 out_flo = sock.makefile(mode='w', encoding='utf-8')
@@ -107,7 +111,7 @@ class LuxGUI():
         except Exception as ex:
             print(ex, file=stderr)
             exit(1)
-    
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -132,4 +136,6 @@ if __name__ == '__main__':
         print("Port can only can be a positive integer", file=stderr)
         exit(1)
 
-    LuxGUI().connect_to_server(host, port, "123")
+    LuxGUI(host, port)
+
+    # LuxGUI().connect_to_server(host, port, )
