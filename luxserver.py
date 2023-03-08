@@ -99,10 +99,10 @@ if __name__ == '__main__':
 
     # parse the port argument
     parser = argparse.ArgumentParser(
-        prog='luxdetails.py', allow_abbrev=False)
+        prog='luxdetails.py', allow_abbrev=False, description='Server for the YUAG application')
 
     parser.add_argument(
-        "port", help="the port at which the server should listen")
+        "port", help="the port at which the server should listen",)
 
     args = parser.parse_args()
     port = args.port
