@@ -95,8 +95,6 @@ class LuxGUI():
         # object label, object date, comma separated list of all agents that produced the object,
         # part they produced, comma separated list of classifiers they used for the object
 
-        table_data = []
-        table_id_data = []
         for row in data:
             # ljust adds space to the right of the string
             # object label
@@ -106,9 +104,15 @@ class LuxGUI():
             one_string = f"{row[1]}".ljust(250, ' ')
             # object date
             one_string += f"{row[3]}".ljust(40, ' ')
-            # comma separated list of agents that produced that object, part they produced
-            one_string += f"{row[2]}".ljust(70, ' ')
+
             # comma separated list of classifiers used for that object
+
+            # part, agent
+            part_agent = row[2].split("(")
+            part_agent[1] = part_agent[1][:-1]
+
+            one_string += part_agent[0].ljust(70, ' ')
+            one_string += part_agent[1].ljust(70, ' ')
 
             one_string += classifier_string
 
