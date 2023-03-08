@@ -89,7 +89,6 @@ class Server():
         # query the database by id if given otherwise by filters
         try:
             if in_flo_input['id']:
-                print("Hello")
                 response = query_by_id.search(in_flo_input['id']) + "\n"
                 client_response = f"Wrote to client: query by id"
             else:

@@ -57,16 +57,18 @@ class LuxQuery(Query):
     def search(self, dep=None, agt=None, classifier=None, label=None):
         """Opens a connection to the database and uses the given argument to create a
         SQL statement that query the database satisfying the search criteria.
+
         Args:
             dep (str): selected department
             agt (str): selected agent
             classifer: selected slassifer
             label: selected label
         Return:
-            list: numbers of items returned from query (search count),
-            columns for Table, a list of objects
+           str: json containing the results of the query
+
         Arguments are by default None if not passed in.
         If no arguments are passed in output includes first 1000 objects in the database.
+
         Sort Order:
             Sorted first by object label/date, then by agent name/part,
             then by classifier, then by department name.
@@ -136,6 +138,16 @@ class LuxQuery(Query):
         return self.convert_to_json(search_count, data)
 
     def convert_to_json(self, search_count, data):
+        """Takes in the search_count and data and convert it to a json format
+
+        Args:
+            search_count (int)
+            data (list)
+
+        Return:
+            str: json string
+        """
+
         database_response = {
             "search_count": search_count,
             "columns": self._columns,
@@ -167,6 +179,16 @@ class LuxDetailsQuery(Query):
         self._format_str_information = ["w", "w"]
 
     def search(self, obj_id):
+        """Opens a connection to the database and uses the given argument to create a
+        SQL statement that query the database by object id and returns the object's information.
+
+        Args:
+            obj_id (str): object's id
+
+        Return:
+            str: json formatted data of the object
+        """
+
         with connect(self._db_file, isolation_level=None, uri=True) as connection:
             with closing(connection.cursor()) as cursor:
                 # objects.label, productions.part, agents.name, nationalities.descriptor,
@@ -206,6 +228,16 @@ class LuxDetailsQuery(Query):
         return self.convert_to_json(agent_rows_list, obj_dict)
 
     def convert_to_json(self, agents_list, obj_dict):
+        """Takes in the search_count and data and convert it to a json format
+
+        Args:
+            agent_list (list): list of agent data
+            obj_dict (dict): dictionary containing object data
+
+        Return:
+            str: json string
+        """
+
         database_response = {
             "columns_produced_by": self._columns_produced_by,
             "columns_information": self._columns_information,
@@ -219,6 +251,7 @@ class LuxDetailsQuery(Query):
 
     def format_data(self, data):
         """Transform each agent's dictionary into a list to fit the Table class requirements.
+
         Args:
             data (dict): dictionary of all the agents
         Returns:
@@ -250,6 +283,7 @@ class LuxDetailsQuery(Query):
         (label, part_produced, produced_by, nationality, begin_date, end_date,
         classifier, ref_type, ref_content, agent_id).
         Stores them in master dictionaries (obj_dict, agent_dict). agent_dict has agent's id as key.
+
         Args:
             data (list): data returned from cursor.fetchall()
         Returns:
