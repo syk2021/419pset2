@@ -196,7 +196,9 @@ class LuxDetailsQuery(Query):
                 smt_str = "SELECT DISTINCT objects.label, productions.part, agents.name,"
                 smt_str += "agents.begin_date, agents.end_date,"
                 smt_str += " nationalities.descriptor, classifiers.name,"
-                smt_str += " \"references\".type, \"references\".content, agents.id"
+                smt_str += " \"references\".type, \"references\".content, agents.id,"
+                # fetch additional data
+                smt_str += " objects.accession_no, objects.date, places.label"
                 # joining objects and agents using productions
                 smt_str += " FROM objects LEFT OUTER JOIN"
                 smt_str += " productions ON productions.obj_id = objects.id"
@@ -213,6 +215,9 @@ class LuxDetailsQuery(Query):
                 smt_str += " objects_classifiers.obj_id = objects.id"
                 smt_str += " LEFT OUTER JOIN classifiers"
                 smt_str += " ON classifiers.id = objects_classifiers.cls_id"
+                # joining places using objects_places
+                smt_str += " LEFT OUTER JOIN objects_places ON objects_places.obj_id = objects.id"
+                smt_str += " LEFT OUTER JOIN places ON objects_places.pl_id = places.id"
                 smt_str += " WHERE objects.id = ?"
                 smt_params = [obj_id]
 
@@ -311,6 +316,9 @@ class LuxDetailsQuery(Query):
             ref_type = row[7]
             ref_content = row[8]
             agent_id = row[9]
+            obj_accession_no = row[10]
+            obj_date = row[11]
+            obj_place = row[12]
 
             timespan = self.parse_date(begin_date, end_date)
 
@@ -320,7 +328,10 @@ class LuxDetailsQuery(Query):
                     "label": label,
                     "classifier": [classifier],
                     "ref_type": [ref_type],
-                    "ref_content": [ref_content]
+                    "ref_content": [ref_content],
+                    "accession_no": obj_accession_no,
+                    "date": obj_date,
+                    "place": obj_place,
                 }
             # if dictionary has already been created, then we append classifiers
             else:

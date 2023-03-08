@@ -7,6 +7,7 @@ from socket import socket
 from dialog import FW_FONT, FixedWidthMessageDialog
 import json
 import argparse
+from table import Table
 
 class LuxGUI():
     """A GUI class for Lux."""
@@ -83,27 +84,38 @@ class LuxGUI():
         self.search_results = self.connect_to_server(json.dumps(data_dict))
 
         # now show the search results
+        # get back: id, label, agent, date, dep, classifiers
         data = self.search_results['data']
+        print(data)
         strings = []
         # Refresh list widgets, in case we had previous search
         self.list_widget.clear()
 
+        # object label, object date, comma separated list of all agents that produced the object,
+        # part they produced, comma separated list of classifiers they used for the object
+
+        table_data = []
+        table_id_data = []
         for row in data:
             # ljust adds space to the right of the string
             # object label
+            classifiers = row[5].split('|')
+            classifier_string = ', '.join(classifiers)
+            
             one_string = f"{row[1]}".ljust(250, ' ')
             # object date
             one_string += f"{row[3]}".ljust(40, ' ')
             # comma separated list of agents that produced that object, part they produced
             one_string += f"{row[2]}".ljust(70, ' ')
-            # comma separated list of classifiers used for that object
-            classifiers = row[5].split('|')
-            classifier_string = ', '.join(classifiers)
+            #comma separated list of classifiers used for that object
+            
             one_string += classifier_string
 
             strings.append(one_string)
             item = QListWidgetItem(one_string)
             item.setFont(FW_FONT)
+            # store data associated with that widget item (id)
+            # for use in double click
             item.setData(Qt.UserRole, row[0])
             self.list_widget.addItem(item)
 
@@ -123,12 +135,48 @@ class LuxGUI():
 
     def list_item_clicked(self, item):
         """When list item is double clicked, display dialog."""
+        # id, label, date
         selected_id = item.data(Qt.UserRole)
         
         data_dict = {"id": selected_id}
-        dialog_results = self.connect_to_server(data_dict)
-        print(dialog_results)
-        FixedWidthMessageDialog("Title", "message").exec()
+        # dialog_data is a dictionary
+        dialog_data = self.connect_to_server(json.dumps(data_dict))
+        dialog_data_obj_dict = dialog_data['object']
+        dialog_data_agt_dict = dialog_data['agents']
+        print(dialog_data)
+
+        space_between_headers = "\n\n"
+        res = ""
+        # Object Information
+        res += "Object Information\n"
+        res += str(Table(["Accession No.", "Label", "Date", "Place"], 
+                         [[str(selected_id), dialog_data_obj_dict['label'],
+                           dialog_data_obj_dict['date'], dialog_data_obj_dict['place']]]))
+        # Produced By
+        res += space_between_headers
+        res += "Produced By\n"
+        res += str(Table(["Part", "Name", "Nationalities", "Timespan"],
+                         [[dialog_data_agt_dict[0][0], dialog_data_agt_dict[0][1],
+                           dialog_data_agt_dict[0][3], dialog_data_agt_dict[0][2]]]))
+        
+        # Classification
+        res += space_between_headers
+        res += "Classification\n"
+        res += ', '.join(dialog_data_obj_dict['classifier'])
+
+        # Information
+        res += space_between_headers
+        res += "Information\n"
+        # ref_rows is a list of list, with each element as a pair of ref type and ref content
+        ref_rows = []
+        for index, ref_type in enumerate(dialog_data_obj_dict['ref_type']):
+            ref_rows.append([ref_type, dialog_data_obj_dict['ref_content'][index]])
+        res += str(Table(['Type', 'Content'], ref_rows))
+
+        # Display dialog item
+        dialog_item = FixedWidthMessageDialog("Title", res)
+        dialog_item.setFont(FW_FONT)
+        dialog_item.exec()
 
     def connect_to_server(self, data):
         """Connect lux to server."""
