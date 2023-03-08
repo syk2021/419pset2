@@ -6,6 +6,7 @@ from sys import exit, argv
 import json
 from socket import socket
 from sys import exit, stderr
+from table import Table
 
 import argparse
 
@@ -24,6 +25,9 @@ class LuxGUI():
         self.layout = QGridLayout()
         self.frame = QFrame()
         self.window = QMainWindow()
+        # self.search_results is a dictionary from json.loads()
+        self.search_results = None
+        self.list_widget = QListWidget()
 
         search_button = QPushButton("Search")
 
@@ -59,32 +63,10 @@ class LuxGUI():
         self.window.resize(screen_size.width()//2, screen_size.height()//2)
 
         # List of responses we get back
-        listwidget = QListWidget()
-        item1 = QListWidgetItem("A")
-        item2 = QListWidgetItem("B")
-        item3 = QListWidgetItem("C")
-        item4 = QListWidgetItem("D")
-        item4 = QListWidgetItem("D")
-        item5 = QListWidgetItem("D")
-        item6 = QListWidgetItem("D")
-        item7 = QListWidgetItem("D")
-        item8 = QListWidgetItem("D")
-        item9 = QListWidgetItem("D")
-
-        listwidget.addItem(item1)
-        listwidget.addItem(item2)
-        listwidget.addItem(item3)
-        listwidget.addItem(item4)
-        listwidget.addItem(item5)
-        listwidget.addItem(item6)
-        listwidget.addItem(item7)
-        listwidget.addItem(item8)
-        listwidget.addItem(item9)
-
-        self.layout.addWidget(listwidget, 8, 0)
+        self.layout.addWidget(self.list_widget, 8, 0)
         scroll_bar = QScrollBar()
         scroll_bar.setStyleSheet("backgroundL lightgreen;")
-        listwidget.addScrollBarWidget(scroll_bar, Qt.AlignLeft)
+        self.list_widget.addScrollBarWidget(scroll_bar, Qt.AlignLeft)
 
         self.window.show()
         exit(self.app.exec())
@@ -98,7 +80,23 @@ class LuxGUI():
         data_dict = {"id": None, "label": data_label, "classifier": data_classifier,
                      "agt": data_agent, "dep": data_department}
         print(data_dict)
-        print(self.connect_to_server(json.dumps(data_dict)))
+        self.search_results = self.connect_to_server(json.dumps(data_dict))
+
+        print(type(self.search_results))
+        print(self.search_results)
+
+        # now show the search results
+        # object's label, object's date, comma-separated list of all agents that produced the object,
+        # the part they produced, a comma-separated list of classifiers used for the object
+        data = self.search_results['data']
+
+        for row in data:
+            print(row)
+            # object label
+            listwidget_string = "{:<50} {:<100}".format(row[1], row[2])
+            item = QListWidgetItem(listwidget_string)
+            self.list_widget.addItem(item)
+        
 
     def parse_label_data(self, line_edit_object):
         input_data = line_edit_object.text()
@@ -120,7 +118,7 @@ class LuxGUI():
                 # read from the server
                 in_flo = sock.makefile(mode='r', encoding='utf-8')
                 response = in_flo.readline()
-            return response
+            return json.loads(response)
         except Exception as ex:
             print(ex, file=stderr)
             exit(1)
