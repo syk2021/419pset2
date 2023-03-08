@@ -135,3 +135,5 @@ if __name__ == '__main__':
     except Exception as err:
         print("The server has crashed, error: ", err, file=stderr)
         exit(1)
+    except KeyboardInterrupt:
+        print("\nProcess: Killing Server")
