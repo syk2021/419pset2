@@ -98,7 +98,7 @@ class LuxGUI():
         data_dict = {"id": None, "label": data_label, "classifier": data_classifier,
                      "agt": data_agent, "dep": data_department}
         print(data_dict)
-        self.connect_to_server(json.dumps(data_dict))
+        print(self.connect_to_server(json.dumps(data_dict)))
 
     def parse_label_data(self, line_edit_object):
         input_data = line_edit_object.text()
@@ -120,11 +120,7 @@ class LuxGUI():
                 # read from the server
                 in_flo = sock.makefile(mode='r', encoding='utf-8')
                 response = in_flo.readline()
-
-                if response == '':
-                    print('The echo server crashed', file=stderr)
-                else:
-                    print(response, end='')
+            return response
         except Exception as ex:
             print(ex, file=stderr)
             exit(1)

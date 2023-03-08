@@ -15,7 +15,7 @@ class Server():
     """Class that represents a server connection that query the database"""
 
     def __init__(self, port):
-        """Initalizes the server with the port being given and call a function to open the socket 
+        """Initalizes the server with the port being given and call a function to open the socket
         and start listening.
 
         Args:
@@ -62,8 +62,8 @@ class Server():
                 print(ex, file=stderr)
 
     def handle_client(self, sock):
-        """Takes in a sock, read the input from the client, query the database 
-        with the given args and returns to the client the query results. 
+        """Takes in a sock, read the input from the client, query the database
+        with the given args and returns to the client the query results.
 
         If id is given, then we query by id otherwise we query by the filter (agt, dep, classifers, lebel)
 
@@ -71,19 +71,25 @@ class Server():
             sock: sock from server_sock
         """
 
-        query_by_filter = LuxDetailsQuery(DB_NAME)
-        query_by_id = LuxQuery(DB_NAME)
+        query_by_id = LuxDetailsQuery(DB_NAME)
+        query_by_filter = LuxQuery(DB_NAME)
 
         # reads in from the client
         in_flo = sock.makefile(mode='r', encoding='utf-8')
         in_flo_input = in_flo.readline()
-        in_flo_input = json.load(in_flo_input)
 
-        print('\nRead from client id: ' + in_flo_input, end='')
+        if in_flo_input == '':
+            print('The lux client crashed')
+            return
+
+        in_flo_input = json.loads(in_flo_input)
+
+        print('\nRead from client id: ' + str(in_flo_input), end='\n')
 
         # query the database by id if given otherwise by filters
         try:
             if in_flo_input['id']:
+                print("Hello")
                 response = query_by_id.search(in_flo_input['id']) + "\n"
                 client_response = f"Wrote to client: query by id"
             else:
@@ -92,17 +98,17 @@ class Server():
                 client_response = f"Wrote to client: query by filter "
         except NoSearchResultsError:
             response = "Invalid id\n"
-            cilent_response = f"\nWrote to client: invalid id\n"
+            client_response = f"\nWrote to client: invalid id\n"
         except sqlite3.Error as err:
             response = str(err) + "\n"
-            cilent_response = f"Wrote to client: {err}\n"
+            client_response = f"Wrote to client: {err}\n"
 
         # return the results of querying the database
         out_flo = sock.makefile(mode='w', encoding='utf-8')
         out_flo.write(response)
         out_flo.flush()
 
-        print(cilent_response)
+        print(client_response)
 
 
 if __name__ == '__main__':

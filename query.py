@@ -133,7 +133,7 @@ class LuxQuery(Query):
                 data = cursor.fetchall()
                 search_count = len(data)
 
-        return self.convert_to_json(self, search_count, data)
+        return self.convert_to_json(search_count, data)
 
     def convert_to_json(self, search_count, data):
         database_response = {
