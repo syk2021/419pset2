@@ -5,6 +5,7 @@ from sqlite3 import connect
 from datetime import datetime
 import json
 import sqlite3
+from lux_query_sql import QUERY_LUX
 
 
 class NoSearchResultsError(Exception):
@@ -33,6 +34,122 @@ class Query():
         """Function used to format data."""
 
         raise NotImplementedError
+
+
+class LuxQuery(Query):
+    """"Class to represent querying the database.
+    Stores the database file for opening connection to later on.
+    Stores the columns for the output table.
+    """
+
+    def __init__(self, db_file):
+        """Initalizes the class with the database file and
+        the columns and format_str for the output table.
+        Args:
+            db_file (str): database file
+        """
+
+        self._db_file = db_file
+        self._columns = ["ID", "Label", "Produced By",
+                         "Date", "Member Of", "Classified As"]
+        self._format_str = ["w", "w", "w", "w", "w", "p"]
+
+    def search(self, dep=None, agt=None, classifier=None, label=None):
+        """Opens a connection to the database and uses the given argument to create a
+        SQL statement that query the database satisfying the search criteria.
+        Args:
+            dep (str): selected department
+            agt (str): selected agent
+            classifer: selected slassifer
+            label: selected label
+        Return:
+            list: numbers of items returned from query (search count),
+            columns for Table, a list of objects
+        Arguments are by default None if not passed in.
+        If no arguments are passed in output includes first 1000 objects in the database.
+        Sort Order:
+            Sorted first by object label/date, then by agent name/part,
+            then by classifier, then by department name.
+        """
+
+        with connect(self._db_file, isolation_level=None, uri=True) as connection:
+            with closing(connection.cursor()) as cursor:
+                # making query backbone to be used in each of the 4 queries below
+                smt_str = QUERY_LUX
+                smt_count = 0
+                smt_params = []
+
+                # WHERE clause
+                if dep or label or agt or classifier:
+                    smt_str += " WHERE"
+                if dep:
+                    smt_str += " department.dep_name LIKE ?"
+                    smt_params.append(f"%{dep}%")
+                    smt_count += 1
+                if label:
+                    if smt_count >= 1:
+                        smt_str += " AND"
+                    smt_str += " objects.label LIKE ?"
+                    smt_params.append(f"%{label}%")
+                    smt_count += 1
+                if agt:
+                    if smt_count >= 1:
+                        smt_str += " AND"
+                    smt_str += " agent.artist LIKE ?"
+                    smt_count += 1
+                    smt_params.append(f"%{agt}%")
+                if classifier:
+                    if smt_count >= 1:
+                        smt_str += " AND"
+                    smt_str += " classifier.classification LIKE ?"
+                    smt_count += 1
+                    smt_params.append(f"%{classifier}%")
+
+                smt_str += " GROUP BY objects.id, objects.label"
+
+                # create the sort order for the query based on present args
+                sort_str = " ORDER BY objects.label, objects.date, "
+                sort_list = []
+                params_list = {
+                    agt: 'agent.artist',
+                    classifier:  'classifier.classification',
+                    dep: 'department.dep_name',
+                }
+
+                for key, value in params_list.items():
+                    if key:
+                        sort_list.append(value)
+
+                for key, value in params_list.items():
+                    if not key:
+                        sort_list.append(value)
+
+                param_sort_str = sort_str + ", ".join(sort_list)
+                smt_str += param_sort_str
+                smt_str += " LIMIT 1000"
+
+                # execute the statement and fetch the results
+                cursor.execute(smt_str, smt_params)
+                data = cursor.fetchall()
+                search_count = len(data)
+
+        return self.convert_to_json(self, search_count, data)
+
+    def convert_to_json(self, search_count, data):
+        database_response = {
+            "search_count": search_count,
+            "columns": self._columns,
+            "format_str": self._format_str,
+            "data": data
+        }
+
+        return json.dumps(database_response)
+
+    def format_data(self, data):
+        pass
+
+    def clean_data(self, data):
+        pass
 
 
 class LuxDetailsQuery(Query):
