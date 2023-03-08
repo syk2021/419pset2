@@ -1,13 +1,13 @@
 from PySide6.QtWidgets import QApplication, QFrame, QLabel, QListWidget
 from PySide6.QtWidgets import QMainWindow, QGridLayout, QPushButton, QLineEdit
-from PySide6.QtWidgets import QScrollBar, QListWidgetItem
+from PySide6.QtWidgets import QScrollBar, QListWidgetItem, QGridLayout
 from PySide6.QtCore import Qt
-from sys import exit, argv
-import json
+from sys import exit, argv, stderr
 from socket import socket
-from sys import exit, stderr
-
+from dialog import FW_FONT, FixedWidthMessageDialog
+import json
 import argparse
+from table import Table
 
 
 class LuxGUI():
@@ -24,8 +24,12 @@ class LuxGUI():
         self.layout = QGridLayout()
         self.frame = QFrame()
         self.window = QMainWindow()
+        # self.search_results is a dictionary from json.loads()
+        self.search_results = None
+        self.list_widget = QListWidget()
 
-        search_button = QPushButton("Search")
+        # when list widget item is clicked, display dialog
+        self.list_widget.itemDoubleClicked.connect(self.list_item_clicked)
 
         # set layout on frame
         self.frame.setLayout(self.layout)
@@ -50,6 +54,7 @@ class LuxGUI():
         self.layout.addWidget(label_department, 3, 0)
         self.layout.addWidget(self.department, 3, 1)
 
+        search_button = QPushButton("Search")
         self.layout.addWidget(search_button, 4, 1)
         search_button.clicked.connect(lambda: self.search())
 
@@ -59,32 +64,10 @@ class LuxGUI():
         self.window.resize(screen_size.width()//2, screen_size.height()//2)
 
         # List of responses we get back
-        listwidget = QListWidget()
-        item1 = QListWidgetItem("A")
-        item2 = QListWidgetItem("B")
-        item3 = QListWidgetItem("C")
-        item4 = QListWidgetItem("D")
-        item4 = QListWidgetItem("D")
-        item5 = QListWidgetItem("D")
-        item6 = QListWidgetItem("D")
-        item7 = QListWidgetItem("D")
-        item8 = QListWidgetItem("D")
-        item9 = QListWidgetItem("D")
-
-        listwidget.addItem(item1)
-        listwidget.addItem(item2)
-        listwidget.addItem(item3)
-        listwidget.addItem(item4)
-        listwidget.addItem(item5)
-        listwidget.addItem(item6)
-        listwidget.addItem(item7)
-        listwidget.addItem(item8)
-        listwidget.addItem(item9)
-
-        self.layout.addWidget(listwidget, 8, 0)
+        self.layout.addWidget(self.list_widget, 8, 0)
         scroll_bar = QScrollBar()
         scroll_bar.setStyleSheet("backgroundL lightgreen;")
-        listwidget.addScrollBarWidget(scroll_bar, Qt.AlignLeft)
+        # self.list_widget.addScrollBarWidget(scroll_bar, Qt.AlignLeft)
 
         self.window.show()
         exit(self.app.exec())
@@ -98,13 +81,104 @@ class LuxGUI():
         data_dict = {"id": None, "label": data_label, "classifier": data_classifier,
                      "agt": data_agent, "dep": data_department}
         print(data_dict)
-        print(self.connect_to_server(json.dumps(data_dict)))
+
+        self.search_results = self.connect_to_server(json.dumps(data_dict))
+
+        # now show the search results
+        # get back: id, label, agent, date, dep, classifiers
+        data = self.search_results['data']
+        print(data)
+        strings = []
+        # Refresh list widgets, in case we had previous search
+        self.list_widget.clear()
+
+        # object label, object date, comma separated list of all agents that produced the object,
+        # part they produced, comma separated list of classifiers they used for the object
+
+        table_data = []
+        table_id_data = []
+        for row in data:
+            # ljust adds space to the right of the string
+            # object label
+            classifiers = row[5].split('|')
+            classifier_string = ', '.join(classifiers)
+
+            one_string = f"{row[1]}".ljust(250, ' ')
+            # object date
+            one_string += f"{row[3]}".ljust(40, ' ')
+            # comma separated list of agents that produced that object, part they produced
+            one_string += f"{row[2]}".ljust(70, ' ')
+            # comma separated list of classifiers used for that object
+
+            one_string += classifier_string
+
+            strings.append(one_string)
+            item = QListWidgetItem(one_string)
+            item.setFont(FW_FONT)
+            # store data associated with that widget item (id)
+            # for use in double click
+            item.setData(Qt.UserRole, row[0])
+            self.list_widget.addItem(item)
+
+        # can delete this for loop once search is working
+        print("")
+        for string in strings:
+            print(len(string))
+            print(string)
 
     def parse_label_data(self, line_edit_object):
+        """Function used to fetch text data from QLineEdit object.
+        If empty string, replace with None to use in query."""
         input_data = line_edit_object.text()
         if input_data == "":
             input_data = None
         return input_data
+
+    def list_item_clicked(self, item):
+        """When list item is double clicked, display dialog."""
+        # id, label, date
+        selected_id = item.data(Qt.UserRole)
+
+        data_dict = {"id": selected_id}
+        # dialog_data is a dictionary
+        dialog_data = self.connect_to_server(json.dumps(data_dict))
+        dialog_data_obj_dict = dialog_data['object']
+        dialog_data_agt_dict = dialog_data['agents']
+        print(dialog_data)
+
+        space_between_headers = "\n\n"
+        res = ""
+        # Object Information
+        res += "Object Information\n"
+        res += str(Table(["Accession No.", "Label", "Date", "Place"],
+                         [[str(selected_id), dialog_data_obj_dict['label'],
+                           dialog_data_obj_dict['date'], dialog_data_obj_dict['place']]]))
+        # Produced By
+        res += space_between_headers
+        res += "Produced By\n"
+        res += str(Table(["Part", "Name", "Nationalities", "Timespan"],
+                         [[dialog_data_agt_dict[0][0], dialog_data_agt_dict[0][1],
+                           dialog_data_agt_dict[0][3], dialog_data_agt_dict[0][2]]]))
+
+        # Classification
+        res += space_between_headers
+        res += "Classification\n"
+        res += ', '.join(dialog_data_obj_dict['classifier'])
+
+        # Information
+        res += space_between_headers
+        res += "Information\n"
+        # ref_rows is a list of list, with each element as a pair of ref type and ref content
+        ref_rows = []
+        for index, ref_type in enumerate(dialog_data_obj_dict['ref_type']):
+            ref_rows.append(
+                [ref_type, dialog_data_obj_dict['ref_content'][index]])
+        res += str(Table(['Type', 'Content'], ref_rows))
+
+        # Display dialog item
+        dialog_item = FixedWidthMessageDialog("Title", res)
+        dialog_item.setFont(FW_FONT)
+        dialog_item.exec()
 
     def connect_to_server(self, data):
         """Connect lux to server."""
@@ -120,7 +194,7 @@ class LuxGUI():
                 # read from the server
                 in_flo = sock.makefile(mode='r', encoding='utf-8')
                 response = in_flo.readline()
-            return response
+            return json.loads(response)
         except Exception as ex:
             print(ex, file=stderr)
             exit(1)
