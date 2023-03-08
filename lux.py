@@ -1,15 +1,11 @@
 from PySide6.QtWidgets import QApplication, QFrame, QLabel, QListWidget
 from PySide6.QtWidgets import QMainWindow, QGridLayout, QPushButton, QLineEdit
-from PySide6.QtWidgets import QScrollBar, QListWidgetItem
-from PySide6.QtCore import Qt
-from sys import exit, argv
-import json
+from PySide6.QtWidgets import QScrollBar, QListWidgetItem, QGridLayout
+from sys import exit, argv, stderr
 from socket import socket
-from sys import exit, stderr
-from table import Table
-
+from dialog import FW_FONT, FixedWidthMessageDialog
+import json
 import argparse
-
 
 class LuxGUI():
     """A GUI class for Lux."""
@@ -29,7 +25,8 @@ class LuxGUI():
         self.search_results = None
         self.list_widget = QListWidget()
 
-        search_button = QPushButton("Search")
+        # when list widget item is clicked, display dialog
+        self.list_widget.itemDoubleClicked.connect(self.list_item_clicked)
 
         # set layout on frame
         self.frame.setLayout(self.layout)
@@ -54,6 +51,7 @@ class LuxGUI():
         self.layout.addWidget(label_department, 3, 0)
         self.layout.addWidget(self.department, 3, 1)
 
+        search_button = QPushButton("Search")
         self.layout.addWidget(search_button, 4, 1)
         search_button.clicked.connect(lambda: self.search())
 
@@ -66,7 +64,7 @@ class LuxGUI():
         self.layout.addWidget(self.list_widget, 8, 0)
         scroll_bar = QScrollBar()
         scroll_bar.setStyleSheet("backgroundL lightgreen;")
-        self.list_widget.addScrollBarWidget(scroll_bar, Qt.AlignLeft)
+        # self.list_widget.addScrollBarWidget(scroll_bar, Qt.AlignLeft)
 
         self.window.show()
         exit(self.app.exec())
@@ -80,29 +78,50 @@ class LuxGUI():
         data_dict = {"id": None, "label": data_label, "classifier": data_classifier,
                      "agt": data_agent, "dep": data_department}
         print(data_dict)
+    
         self.search_results = self.connect_to_server(json.dumps(data_dict))
 
-        print(type(self.search_results))
-        print(self.search_results)
-
         # now show the search results
-        # object's label, object's date, comma-separated list of all agents that produced the object,
-        # the part they produced, a comma-separated list of classifiers used for the object
         data = self.search_results['data']
+        strings = []
+        # Refresh list widgets, in case we had previous search
+        self.list_widget.clear()
 
         for row in data:
-            print(row)
+            # ljust adds space to the right of the string
             # object label
-            listwidget_string = "{:<50} {:<100}".format(row[1], row[2])
-            item = QListWidgetItem(listwidget_string)
+            one_string = f"{row[1]}".ljust(250, ' ')
+            # object date
+            one_string += f"{row[3]}".ljust(40, ' ')
+            # comma separated list of agents that produced that object, part they produced
+            one_string += f"{row[2]}".ljust(70, ' ')
+            # comma separated list of classifiers used for that object
+            classifiers = row[5].split('|')
+            classifier_string = ', '.join(classifiers)
+            one_string += classifier_string
+
+            strings.append(one_string)
+            item = QListWidgetItem(one_string)
+            item.setFont(FW_FONT)
             self.list_widget.addItem(item)
-        
+
+        # can delete this for loop once search is working
+        print("")
+        for string in strings:
+            print(len(string))
+            print(string)
 
     def parse_label_data(self, line_edit_object):
+        """Function used to fetch text data from QLineEdit object.
+        If empty string, replace with None to use in query."""
         input_data = line_edit_object.text()
         if input_data == "":
             input_data = None
         return input_data
+
+    def list_item_clicked(self, item):
+        """When list item is double clicked, display dialog."""
+        FixedWidthMessageDialog("Title", "message").exec()
 
     def connect_to_server(self, data):
         """Connect lux to server."""
@@ -149,4 +168,3 @@ if __name__ == '__main__':
 
     LuxGUI(host, port)
 
-    # LuxGUI().connect_to_server(host, port, )
