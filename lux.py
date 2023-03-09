@@ -2,6 +2,7 @@ from PySide6.QtWidgets import QApplication, QFrame, QLabel, QListWidget
 from PySide6.QtWidgets import QMainWindow, QGridLayout, QPushButton, QLineEdit
 from PySide6.QtWidgets import QScrollBar, QListWidgetItem, QGridLayout, QErrorMessage
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QKeyEvent
 from sys import exit, argv, stderr
 from socket import socket
 from dialog import FW_FONT, FixedWidthMessageDialog
@@ -38,7 +39,9 @@ class LuxGUI():
 
         # When list widget item is clicked, display dialog
         self.list_widget.itemDoubleClicked.connect(self.callback_list_item)
-
+        # install event filter for pressing enter in list widget item
+        self.list_widget.itemPressed.connect(self.callback_list_item_enter)
+        
         # Set layout on frame
         self.frame.setLayout(self.layout)
 
@@ -139,11 +142,13 @@ class LuxGUI():
             input_data = None
         return input_data
 
+    def callback_list_item_enter(self, item, event):
+        
+        print(item)
+
     def callback_list_item(self, item):
         """Callback function for when list item is double clicked, display dialog."""
-
-        # id, label, date
-
+        
         selected_id = item.data(Qt.UserRole)
 
         data_dict = {"id": selected_id}
