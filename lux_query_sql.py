@@ -1,7 +1,7 @@
 """Module for main query in LuxQuery class in query.py."""
 
 QUERY_LUX = """WITH classifier AS (
-    SELECT id, group_concat(cls_name, '|') as classification FROM (
+    SELECT id, group_concat(cls_name, ', ') as classification FROM (
         SELECT objects.id, LOWER(classifiers.name) AS cls_name
         FROM objects
         LEFT OUTER JOIN objects_classifiers ON objects_classifiers.obj_id = objects.id

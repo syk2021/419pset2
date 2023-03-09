@@ -115,7 +115,6 @@ class LuxQuery(Query):
                 params_list = {
                     agt: 'agent.artist',
                     classifier:  'classifier.classification',
-                    dep: 'department.dep_name',
                 }
 
                 for key, value in params_list.items():
