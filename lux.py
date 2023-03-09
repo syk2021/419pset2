@@ -97,10 +97,13 @@ class LuxGUI():
         exit(self.app.exec())
 
     def connect_to_server(self, data):
-        """Connect lux to server and fetch the data sent from the server
+        """Connect lux to server and fetch the data sent from the server.
 
         Args:
             data (dict): user inputted arguments as a dictionary
+
+        Return:
+            json str
         """
 
         with socket() as sock:
@@ -124,6 +127,8 @@ class LuxGUI():
         Args:
             line_edit_object: a line edit object
 
+        Return:
+            text data from QLineEdit object
         """
 
         input_data = line_edit_object.text()
@@ -187,7 +192,7 @@ class LuxGUI():
             super(QListWidget, self.list_widget).keyPressEvent(event)
 
     def callback_list_item(self, item):
-        """Callback function for when list item is double clicked, display dialog.
+        """Callback function for when list item is double clicked, display dialog with the object's information.
 
         Args:
             item: list object
