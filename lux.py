@@ -40,8 +40,8 @@ class LuxGUI():
         # When list widget item is clicked, display dialog
         self.list_widget.itemDoubleClicked.connect(self.callback_list_item)
         # install event filter for pressing enter in list widget item
-        self.list_widget.itemPressed.connect(self.callback_list_item_enter)
-        
+        # self.list_widget.itemPressed.connect(self.callback_list_item_enter)
+        self.list_widget.keyPressEvent = self.callback_list_item_enter
         # Set layout on frame
         self.frame.setLayout(self.layout)
 
@@ -142,9 +142,9 @@ class LuxGUI():
             input_data = None
         return input_data
 
-    def callback_list_item_enter(self, item, event):
-        
-        print(item)
+    def callback_list_item_enter(self, event):
+        if event.key() == Qt.Key.Key_Return:
+            self.callback_list_item(self.list_widget.selectedItems()[0])
 
     def callback_list_item(self, item):
         """Callback function for when list item is double clicked, display dialog."""
