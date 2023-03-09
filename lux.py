@@ -32,6 +32,7 @@ class LuxGUI():
         # self.search_results is a dictionary from json.loads()
         self.search_results = None
         self.list_widget = QListWidget()
+        self.list_widget.setFont(FW_FONT)
 
         # When list widget item is clicked, display dialog
         self.list_widget.itemDoubleClicked.connect(self.callback_list_item)
@@ -72,13 +73,13 @@ class LuxGUI():
         # List of responses we get back
         self.layout.addWidget(self.list_widget, 8, 0)
         scroll_bar = QScrollBar()
-        scroll_bar.setStyleSheet("backgroundL lightgreen;")
+        scroll_bar.setStyleSheet("background lightgreen;")
 
         # Set the tab order for the labels and search button (TODO)
-        self.label.setTabOrder(self.label, self.classifier)
-        self.classifier.setTabOrder(self.classifier, self.agent)
-        self.agent.setTabOrder(self.agent, self.department)
-        self.department.setTabOrder(self.department, search_button)
+        self.window.setTabOrder(self.label, self.classifier)
+        self.window.setTabOrder(self.classifier, self.agent)
+        self.window.setTabOrder(self.agent, self.department)
+        self.window.setTabOrder(self.department, search_button)
 
         self.layout.addWidget(self.list_widget, 8, 0)
 
@@ -113,10 +114,22 @@ class LuxGUI():
         # Now show the search results
         # get back: id, label, agent, date, dep, classifiers
         data = self.search_results['data']
+        
         strings = []
+        
+        print(self.search_results['data'])
 
         # Refresh list widgets, in case we had previous search
         self.list_widget.clear()
+        search_table = Table(self.search_results["columns"], self.search_results["data"], max_width = 100000000, format_str=['w', 'w', 'w', 'w', 'w', 'w'])
+        print("search table:")
+        print(search_table)
+        table_data = []
+        for row in search_table:
+
+            print(row)
+            self.list_widget.addItem(''.join(row))
+
 
         # object label, object date, comma separated list of all agents that produced the object,
         # part they produced, comma separated list of classifiers they used for the object
