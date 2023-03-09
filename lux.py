@@ -112,66 +112,12 @@ class LuxGUI():
             return
 
         # Now show the search results
-        # get back: id, label, agent, date, dep, classifiers
-        data = self.search_results['data']
-        
-        strings = []
-        
-        print(self.search_results['data'])
-
         # Refresh list widgets, in case we had previous search
         self.list_widget.clear()
         search_table = Table(self.search_results["columns"], self.search_results["data"], max_width = 100000000, format_str=['w', 'w', 'w', 'w', 'w', 'w'])
-        print("search table:")
-        print(search_table)
-        table_data = []
+        
         for row in search_table:
-
-            print(row)
             self.list_widget.addItem(''.join(row))
-
-
-        # object label, object date, comma separated list of all agents that produced the object,
-        # part they produced, comma separated list of classifiers they used for the object
-        # creats a row for each object to be displayed in the GUI
-        for row in data:
-            # ljust adds space to the right of the string
-            # object label
-
-            # comma separated list of classifiers used for that object
-            if row[5]:
-                classifiers = row[5].split('|')
-                classifier_string = ', '.join(classifiers)
-            else:
-                classifier_string = ""
-
-            # object name
-            one_string = f"{row[1]}".ljust(250, ' ')
-
-            # object date
-            one_string += f"{row[3]}".ljust(40, ' ')
-
-            # part, agent, N/A if not present
-            if row[2]:
-                part_agent = row[2].split("(")
-                part_agent[1] = part_agent[1][:-1]
-                one_string += part_agent[0].ljust(70, ' ')
-                one_string += part_agent[1].ljust(70, ' ')
-            else:
-                one_string += "N/A".ljust(70, ' ')
-                one_string += "N/A".ljust(70, ' ')
-
-            # join the whole row together
-            one_string += classifier_string
-            strings.append(one_string)
-
-            item = QListWidgetItem(one_string)
-            item.setFont(FW_FONT)
-
-            # store data associated with that widget item (id)
-            # for use in double click
-            item.setData(Qt.UserRole, row[0])
-            self.list_widget.addItem(item)
 
     def parse_label_data(self, line_edit_object):
         """Function used to fetch text data from QLineEdit object.

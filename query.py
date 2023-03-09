@@ -146,6 +146,20 @@ class LuxQuery(Query):
         Return:
             str: json string
         """
+        for index, row in enumerate(data):
+            # drop department
+            row = row[:4] + row[5:]
+            # split agent + part
+            agent, part = row[2].split('(')
+            agent = agent[:-1]
+            part = part[:-1]
+            row = row[:2] + (agent,) + row[2:]
+            row = row[:3] + (part,) + row[4:]
+            # switch object date and object agent
+            object_date = row[4]
+            row = row[:4] + row[5:]
+            row = row[:2] + (object_date,) + row[2:]
+            data[index] = row
 
         database_response = {
             "search_count": search_count,
