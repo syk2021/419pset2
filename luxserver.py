@@ -1,12 +1,16 @@
-from contextlib import closing
-from socket import socket, SOL_SOCKET, SO_REUSEADDR
-from sys import exit, argv, stderr
-from os import name
+"""Module for creating a server connection for the database"""
+
 import argparse
-from query import LuxDetailsQuery, NoSearchResultsError, LuxQuery
-import sys
 import sqlite3
 import json
+import sys
+
+from contextlib import closing
+from socket import socket, SOL_SOCKET, SO_REUSEADDR
+from os import name
+
+from query import LuxDetailsQuery, LuxQuery, NoSearchResultsError
+
 
 DB_NAME = "./lux.sqlite"
 
@@ -14,7 +18,7 @@ DB_NAME = "./lux.sqlite"
 class Server():
     """Class that represents a server connection that query the database"""
 
-    def __init__(self, port):
+    def __init__(self, server_port):
         """Initalizes the server with the port being given and call a function to open the socket
         and start listening.
 
@@ -23,7 +27,7 @@ class Server():
 
         """
 
-        self._port = port
+        self._port = server_port
         self.open_socket()
 
     def open_socket(self):
@@ -39,8 +43,8 @@ class Server():
 
             self.handle_connection(server_sock)
         except Exception as ex:
-            print(ex, file=stderr)
-            exit(1)
+            print(ex, file=sys.stderr)
+            sys.exit(1)
 
     def handle_connection(self, server_sock):
         """Takes in a socket and accept a connection to the server and calls a function
@@ -59,13 +63,14 @@ class Server():
                     print('Client IP address and port:', client_addr)
                     self.handle_client(sock)
             except Exception as ex:
-                print(ex, file=stderr)
+                print(ex, file=sys.stderr)
 
     def handle_client(self, sock):
         """Takes in a sock, read the input from the client, query the database
         with the given args and returns to the client the query results.
 
-        If id is given, then we query by id otherwise we query by the filter (agt, dep, classifers, lebel)
+        If id is given, then we query by id otherwise we query by the filter:
+        (agt, dep, classifers, lebel)
 
         Args:
             sock: sock from server_sock
@@ -90,14 +95,15 @@ class Server():
         try:
             if in_flo_input['id']:
                 response = query_by_id.search(in_flo_input['id']) + "\n"
-                client_response = f"Wrote to client: query by id"
+                client_response = "Wrote to client: query by id"
             else:
                 response = query_by_filter.search(agt=in_flo_input['agt'], dep=in_flo_input['dep'],
-                                                  classifier=in_flo_input['classifier'], label=in_flo_input['label'])
-                client_response = f"Wrote to client: query by filter "
+                                                  classifier=in_flo_input['classifier'],
+                                                  label=in_flo_input['label'])
+                client_response = "Wrote to client: query by filter "
         except NoSearchResultsError:
             response = "Invalid id\n"
-            client_response = f"\nWrote to client: invalid id\n"
+            client_response = "\nWrote to client: invalid id\n"
         except sqlite3.Error as err:
             response = str(err) + "\n"
             client_response = f"Wrote to client: {err}\n"
@@ -110,7 +116,7 @@ class Server():
         out_flo.write(response)
         out_flo.flush()
 
-        print(client_response + "\n")
+        print(client_response + "\n", end="")
 
 
 if __name__ == '__main__':
@@ -128,15 +134,15 @@ if __name__ == '__main__':
     # make sure that port is valid
     try:
         port = int(port)
-    except Exception as err:
-        print("error: port must be an integer 0-65535", file=stderr)
-        exit(1)
+    except Exception as err_mess:
+        print("error: port must be an integer 0-65535", file=sys.stderr)
+        sys.exit(1)
 
     # starts the server with the port
     try:
         Server(port)
-    except Exception as err:
-        print("The server has crashed, error: ", err, file=stderr)
-        exit(1)
+    except Exception as err_message:
+        print("The server has crashed, error: ", err_mess, file=sys.stderr)
+        sys.exit(1)
     except KeyboardInterrupt:
         print("\nProcess: Killing Server")

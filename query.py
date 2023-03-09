@@ -1,12 +1,13 @@
 """Module handling queries for the database."""
 
+import re
+import json
+
 from contextlib import closing
 from sqlite3 import connect
 from datetime import datetime
-import json
-import sqlite3
+
 from lux_query_sql import QUERY_LUX
-import re
 
 
 class NoSearchResultsError(Exception):
@@ -31,7 +32,7 @@ class Query():
 
         raise NotImplementedError
 
-    def convert_to_json(self, data):
+    def convert_to_json(self, data1, data2):
         """Function to convert data to json"""
 
         raise NotImplementedError
@@ -56,8 +57,8 @@ class LuxQuery(Query):
         """
 
         self._db_file = db_file
-        self._columns = ["ID", "Label", "Produced By",
-                         "Date", "Member Of", "Classified As"]
+        self._columns = ["ID", "Label", "Date",
+                         "Produced By", "Classified As"]
         self._format_str = ["w", "w", "w", "w", "w", "p"]
 
     def search(self, dep=None, agt=None, classifier=None, label=None):
@@ -139,33 +140,32 @@ class LuxQuery(Query):
                 cursor.execute(smt_str, smt_params)
                 data = cursor.fetchall()
                 search_count = len(data)
-
         return self.convert_to_json(search_count, data)
 
-    def convert_to_json(self, search_count, data):
+    def convert_to_json(self, data1, data2):
         """Takes in the search_count and data and convert it to a json format
         while parsing the data to split agent and part and switching object date and object agent.
 
         Args:
-            search_count (int)
-            data (list)
+            data1: search_count (int)
+            data2: data (list)
 
         Return:
             str: json string
         """
 
+        search_count = data1
+        data = data2
+
         for index, row in enumerate(data):
             # drop department
             row = row[:4] + row[5:]
-            # split agent + part
-            agent, part = self.split_part_agent(row[2])
 
-            row = row[:2] + (agent,) + row[2:]
-            row = row[:3] + (part,) + row[4:]
             # switch object date and object agent
-            object_date = row[4]
-            row = row[:4] + row[5:]
-            row = row[:2] + (object_date,) + row[2:]
+            object_date = row[3]
+            object_agent = row[2]
+            row = row[:2] + (object_date,) + (object_agent, ) + row[4:]
+
             data[index] = row
 
         database_response = {
@@ -176,30 +176,6 @@ class LuxQuery(Query):
         }
 
         return json.dumps(database_response)
-
-    def split_part_agent(self, agent_part):
-        """RegEx to split the agent and part from the database into two seperates string.
-
-        Args:
-            agent_part (str): Agent, (Part)
-
-        Return:
-            (tuple) "Agent", "Part"
-        """
-
-        if not agent_part:
-            return "", ""
-
-        # get part
-        part_regex = r'\(([^)]*)\)'
-
-        # get agent
-        agent = re.sub(part_regex, '', agent_part).strip(', ')
-        agent = re.sub(r'\s*,\s*', ',', agent)
-
-        part = re.findall(part_regex, agent_part)
-
-        return agent, ",".join(part)
 
     def format_data(self, data):
         pass
@@ -276,16 +252,19 @@ class LuxDetailsQuery(Query):
         agent_rows_list = self.format_data(agent_dict)
         return self.convert_to_json(agent_rows_list, obj_dict)
 
-    def convert_to_json(self, agents_list, obj_dict):
+    def convert_to_json(self, data1, data2):
         """Takes in the search_count and data and convert it to a json format
 
         Args:
-            agent_list (list): list of agent data
-            obj_dict (dict): dictionary containing object data
+           data1: agent_list (list): list of agent data
+           data2: obj_dict (dict): dictionary containing object data
 
         Return:
             str: json string
         """
+
+        agents_list = data1
+        obj_dict = data2
 
         database_response = {
             "columns_produced_by": self._columns_produced_by,

@@ -1,31 +1,40 @@
-from PySide6.QtWidgets import QApplication, QFrame, QLabel, QListWidget
-from PySide6.QtWidgets import QMainWindow, QGridLayout, QPushButton, QLineEdit
-from PySide6.QtWidgets import QScrollBar, QListWidgetItem, QGridLayout, QErrorMessage
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QKeyEvent
-from sys import exit, argv, stderr
-from socket import socket
-from dialog import FW_FONT, FixedWidthMessageDialog
+"""Module for the GUI client side of the application."""
+
 import json
 import argparse
+import sys
+
+from socket import socket
+
+from PySide6.QtWidgets import QApplication, QFrame, QLabel, QListWidget
+from PySide6.QtWidgets import QMainWindow, QGridLayout, QPushButton, QLineEdit
+from PySide6.QtWidgets import QScrollBar, QListWidgetItem, QErrorMessage
+from PySide6.QtCore import Qt
+
+from dialog import FW_FONT, FixedWidthMessageDialog
 from table import Table
+
+
+class InvalidPort(Exception):
+    """Exception class to handle invalid port."""
 
 
 class LuxGUI():
     """A GUI class for Lux."""
 
-    def __init__(self, host, port):
-        """Initalizes the GUI with the given host and port and creates the neccessary widgets and frame for the GUI
+    def __init__(self, server_host, server_port):
+        """Initalizes the GUI with the given host and port 
+        and creates the neccessary widgets and frame for the GUI.
 
         Args:
             host (str): host to connect to
             port (int): port to connect to
         """
 
-        self._host = host
-        self._port = port
+        self._host = server_host
+        self._port = server_port
 
-        self.app = QApplication(argv)
+        self.app = QApplication(sys.argv)
         self.label = QLineEdit()
         self.classifier = QLineEdit()
         self.agent = QLineEdit()
@@ -87,14 +96,14 @@ class LuxGUI():
         scroll_bar = QScrollBar()
         scroll_bar.setStyleSheet("background lightgreen;")
 
-        self.original_keyPressEvent = self.window.keyPressEvent
+        # self.original_keyPressEvent = self.window.keyPressEvent
         # set key press event
         self.window.keyPressEvent = self.on_enter
 
         self.layout.addWidget(self.list_widget, 8, 0)
 
         self.window.show()
-        exit(self.app.exec())
+        sys.exit(self.app.exec())
 
     def connect_to_server(self, data):
         """Connect lux to server and fetch the data sent from the server.
@@ -138,7 +147,8 @@ class LuxGUI():
 
     def callback_search(self):
         """Callback function that executes when user clicks search button.
-        It connect to server with the inputted arguments, retrieves the data from the server, and parse the data returned.
+        It connect to server with the inputted arguments, 
+        retrieves the data from the server, and parse the data returned.
         """
 
         # Parse the data inputted by the user and creates a dict for it
@@ -166,7 +176,7 @@ class LuxGUI():
         # Refresh list widgets, in case we had previous search
         self.list_widget.clear()
         search_table = Table(self.search_results["columns"], self.search_results["data"],
-                             max_width=100000000, format_str=['w', 'w', 'w', 'w', 'w', 'w'])
+                             max_width=100000000, format_str=['w', 'w', 'w', 'w', 'w'])
 
         for index, row in enumerate(search_table):
             item = QListWidgetItem(''.join(row))
@@ -174,7 +184,8 @@ class LuxGUI():
             self.list_widget.addItem(item)
 
     def callback_list_item_enter(self, event):
-        """Callback function for the list widget item that checks if the key press is enter. if so, it will treat it as if the item is double clicked.
+        """Callback function for the list widget item that checks if the key press is enter. 
+        if so, it will treat it as if the item is double clicked.
         If the event is not enter, then it will treat the key press as normal.
 
         Args:
@@ -185,14 +196,15 @@ class LuxGUI():
         if event.key() == Qt.Key.Key_Return:
             try:
                 self.callback_list_item(self.list_widget.selectedItems()[0])
-            except:
+            except IndexError:
                 self.error_message.showMessage("Please select a field!")
 
         else:
             super(QListWidget, self.list_widget).keyPressEvent(event)
 
     def callback_list_item(self, item):
-        """Callback function for when list item is double clicked, display dialog with the object's information.
+        """Callback function for when list item is double clicked, 
+        display dialog with the object's information.
 
         Args:
             item: list object
@@ -205,8 +217,8 @@ class LuxGUI():
         # dialog_data is a dictionary
         try:
             dialog_data = self.connect_to_server(json.dumps(data_dict))
-        except Exception as err:
-            self.error_message.showMessage(str(err))
+        except Exception as err_message:
+            self.error_message.showMessage(str(err_message))
             return
 
         dialog_data_obj_dict = dialog_data['object']
@@ -247,15 +259,16 @@ class LuxGUI():
         dialog_item.setFont(FW_FONT)
         dialog_item.exec()
 
-    def on_enter(self, e):
+    def on_enter(self, event):
         """Function to detect if enter key is pressed. 
-        If the enter key is pressed it will execute callback_search if it's on on a list widget entry.
+        If the enter key is pressed it will execute callback_search 
+        if it's on on a list widget entry.
 
         Args:
             e: event
         """
 
-        if e.key() == Qt.Key.Key_Return:
+        if event.key() == Qt.Key.Key_Return:
             self.callback_search()
 
 
@@ -263,7 +276,7 @@ if __name__ == '__main__':
 
     # parse the data
     parser = argparse.ArgumentParser(
-        prog='lux.py', allow_abbrev=False)
+        prog='lux.py', description='Client for the YUAG application', allow_abbrev=False)
 
     parser.add_argument(
         "host", help="the host on which the server is running")
@@ -280,13 +293,16 @@ if __name__ == '__main__':
     try:
         port = int(port)
         if port < 0 or port > 65535:
-            raise Exception
-    except Exception as err:
-        print("error: port must be an integer 0-65535", file=stderr)
-        exit(1)
+            raise InvalidPort
+    except InvalidPort:
+        print("error: port must be an integer 0-65535", file=sys.stderr)
+        sys.exit(1)
+    except Exception as error_message:
+        print(f"error: {error_message}", file=sys.stderr)
+        sys.exit(1)
 
     # initalizes the GUI
     try:
         LuxGUI(host, port)
-    except Exception as err:
-        print(f"The GUI has crashed: {err}", file=stderr)
+    except Exception as err_mess:
+        print(f"The GUI has crashed: {err_mess}", file=sys.stderr)

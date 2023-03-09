@@ -51,4 +51,15 @@ The specs can be more organized. Information on what is needed should be in one 
 For us it seems like whenever we finished one thing, we found more hidden details in the specs that need to be added.
 
 ## Any information to graders
-For query.py, we have a pylint error that says too many local variables, but we only exceeded the limit by 1 or 3 and have tried to eliminate local variables without making the code unreadable. There is an error with the number of arguments from LuxDetailsQuery, because we inherit from the Query class, but we think this is negligible for the most part. We have no errors for lux.py, luxdetails.py, and lux_query_sql.py.
+For query.py, we have a pylint error that says too many local variables, but we only exceeded the limit by 1 or 3 and have tried to eliminate local variables without making the code unreadable. There is an error with the number of arguments from LuxDetailsQuery, because we inherit from the Query class, but we think this is negligible for the most part. 
+
+For luxserver.py, and lux.py we get a broad-exception-caught error. However, this is extended behavior as we are trying to exit the program safely we want to try to catch a general exception just in case. We have specific exception already when neccessary.
+
+For lux.py, we have too many instance attribute, however this is needed to make the GUI. We also have a lambda may not be necessary, but it's necessary to how the callback works. We also get a super error, for passing in QListWidget, but that is needed for the up and down arrow traversing in a list feature of our program. Finally, we get a redefining err_mess from outer
+
+
+For all the files we might an import error. However, the import is correct as our program is running proprely so we believe this an error on pylint side.
+
+
+
+We have no errors for lux.py, luxdetails.py, and lux_query_sql.py.
