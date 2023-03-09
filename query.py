@@ -6,6 +6,7 @@ from datetime import datetime
 import json
 import sqlite3
 from lux_query_sql import QUERY_LUX
+import re
 
 
 class NoSearchResultsError(Exception):
@@ -136,6 +137,17 @@ class LuxQuery(Query):
 
         return self.convert_to_json(search_count, data)
 
+    def split_part_agent(self, agent_part):
+        # get text parentheses
+        part_regex = r'\(([^)]*)\)'
+
+        agent = re.sub(part_regex, '', agent_part).strip(', ')
+        agent = re.sub(r'\s*,\s*', ',', agent)
+
+        part = re.findall(part_regex, agent_part)
+
+        return agent, ",".join(part)
+
     def convert_to_json(self, search_count, data):
         """Takes in the search_count and data and convert it to a json format
 
@@ -146,13 +158,13 @@ class LuxQuery(Query):
         Return:
             str: json string
         """
+
         for index, row in enumerate(data):
             # drop department
             row = row[:4] + row[5:]
             # split agent + part
-            agent, part = row[2].split('(')
-            agent = agent[:-1]
-            part = part[:-1]
+            agent, part = self.split_part_agent(row[2])
+
             row = row[:2] + (agent,) + row[2:]
             row = row[:3] + (part,) + row[4:]
             # switch object date and object agent

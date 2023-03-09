@@ -101,6 +101,9 @@ class Server():
         except sqlite3.Error as err:
             response = str(err) + "\n"
             client_response = f"Wrote to client: {err}\n"
+        except Exception as err:
+            response = str(err) + "\n"
+            client_response = f"Wrote to client: {err}\n"
 
         # return the results of querying the database
         out_flo = sock.makefile(mode='w', encoding='utf-8')

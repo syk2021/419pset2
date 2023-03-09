@@ -15,7 +15,12 @@ class LuxGUI():
     """A GUI class for Lux."""
 
     def __init__(self, host, port):
-        """Initalizes the GUI with the given host and port and creates the neccessary widgets and frame for the GUI"""
+        """Initalizes the GUI with the given host and port and creates the neccessary widgets and frame for the GUI
+
+        Args:
+            host (str): host to connect to
+            port (int): port to connect to
+        """
 
         self._host = host
         self._port = port
@@ -94,13 +99,45 @@ class LuxGUI():
         self.window.show()
         exit(self.app.exec())
 
-    def on_enter(self, e):
-        if e.key() == Qt.Key.Key_Return:
-            self.callback_search()
+    def connect_to_server(self, data):
+        """Connect lux to server and fetch the data sent from the server
+
+        Args:
+            data (dict): user inputted arguments as a dictionary
+        """
+
+        with socket() as sock:
+            sock.connect((self._host, self._port))
+
+            # write to the server
+            out_flo = sock.makefile(mode='w', encoding='utf-8')
+            out_flo.write(data + "\n")
+            out_flo.flush()
+
+            # read from the server
+            in_flo = sock.makefile(mode='r', encoding='utf-8')
+            response = in_flo.readline()
+
+        return json.loads(response)
+
+    def parse_label_data(self, line_edit_object):
+        """Function used to fetch text data from QLineEdit object.
+        If empty string, replace with None to use in query.
+
+        Args:
+            line_edit_object: a line edit object
+
+        """
+
+        input_data = line_edit_object.text()
+        if input_data == "":
+            input_data = None
+        return input_data
 
     def callback_search(self):
         """Callback function that executes when user clicks search button.
-        It connect to server with the inputted arguments, retrieves the data from the server, and parse the data returned."""
+        It connect to server with the inputted arguments, retrieves the data from the server, and parse the data returned.
+        """
 
         # Parse the data inputted by the user and creates a dict for it
         data_label = self.parse_label_data(self.label)
@@ -134,26 +171,26 @@ class LuxGUI():
             item.setData(Qt.UserRole, self.search_results["data"][index][0])
             self.list_widget.addItem(item)
 
-    def parse_label_data(self, line_edit_object):
-        """Function used to fetch text data from QLineEdit object.
-        If empty string, replace with None to use in query."""
-
-        input_data = line_edit_object.text()
-        if input_data == "":
-            input_data = None
-        return input_data
-
     def callback_list_item_enter(self, event):
-        # if event.key() == Qt.Key.Key_Return:
-        #     self.callback_list_item(item)
+        """Callback function for the list widget item that checks if the key press is enter. if so, it will treat it as if the item is double clicked.
+        If the event is not enter, then it will treat the key press as normal.
 
+        Args:
+            event: event from GUI
+        """
+
+        # call regular function if key is not return or else will handle it like double click
         if event.key() == Qt.Key.Key_Return:
             self.callback_list_item(self.list_widget.selectedItems()[0])
         else:
             super(QListWidget, self.list_widget).keyPressEvent(event)
 
     def callback_list_item(self, item):
-        """Callback function for when list item is double clicked, display dialog."""
+        """Callback function for when list item is double clicked, display dialog.
+
+        Args:
+            item: list object
+        """
 
         selected_id = item.data(Qt.UserRole)
 
@@ -204,25 +241,20 @@ class LuxGUI():
         dialog_item.setFont(FW_FONT)
         dialog_item.exec()
 
-    def connect_to_server(self, data):
-        """Connect lux to server and fetch the data sent from the server"""
+    def on_enter(self, e):
+        """Function to detect if enter key is pressed. If the enter key is pressed it will execute callback_search.
 
-        with socket() as sock:
-            sock.connect((self._host, self._port))
+        Args:
+            e: event
+        """
 
-            # write to the server
-            out_flo = sock.makefile(mode='w', encoding='utf-8')
-            out_flo.write(data + "\n")
-            out_flo.flush()
-
-            # read from the server
-            in_flo = sock.makefile(mode='r', encoding='utf-8')
-            response = in_flo.readline()
-
-        return json.loads(response)
+        if e.key() == Qt.Key.Key_Return:
+            self.callback_search()
 
 
 if __name__ == '__main__':
+
+    # parse the data
     parser = argparse.ArgumentParser(
         prog='lux.py', allow_abbrev=False)
 
@@ -237,6 +269,7 @@ if __name__ == '__main__':
     host = args.host
     port = args.port
 
+    # ensure alid port
     try:
         port = int(port)
         if port < 0 or port > 65535:
@@ -245,7 +278,5 @@ if __name__ == '__main__':
         print("error: port must be an integer 0-65535", file=stderr)
         exit(1)
 
+    # initalizes the GUI
     LuxGUI(host, port)
-
-
-# Question - once we query the data,and the server disocnnect, should we still be able to display it?
