@@ -85,7 +85,7 @@ class LuxGUI():
         self.window.setTabOrder(self.classifier, self.agent)
         self.window.setTabOrder(self.agent, self.department)
         self.window.setTabOrder(self.department, search_button)
-        self.original_keyPressEvent= self.window.keyPressEvent
+        self.original_keyPressEvent = self.window.keyPressEvent
         # set key press event
         self.window.keyPressEvent = self.on_enter
 
@@ -126,7 +126,8 @@ class LuxGUI():
         # Now show the search results
         # Refresh list widgets, in case we had previous search
         self.list_widget.clear()
-        search_table = Table(self.search_results["columns"], self.search_results["data"], max_width = 100000000, format_str=['w', 'w', 'w', 'w', 'w', 'w'])
+        search_table = Table(self.search_results["columns"], self.search_results["data"],
+                             max_width=100000000, format_str=['w', 'w', 'w', 'w', 'w', 'w'])
 
         for index, row in enumerate(search_table):
             item = QListWidgetItem(''.join(row))
@@ -145,15 +146,15 @@ class LuxGUI():
     def callback_list_item_enter(self, event):
         # if event.key() == Qt.Key.Key_Return:
         #     self.callback_list_item(item)
-        
+
         if event.key() == Qt.Key.Key_Return:
             self.callback_list_item(self.list_widget.selectedItems()[0])
         else:
-           ##
+            super(QListWidget, self.list_widget).keyPressEvent(event)
 
     def callback_list_item(self, item):
         """Callback function for when list item is double clicked, display dialog."""
-        
+
         selected_id = item.data(Qt.UserRole)
 
         data_dict = {"id": selected_id}
