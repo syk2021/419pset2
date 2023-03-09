@@ -34,6 +34,7 @@ class LuxGUI():
         self.frame = QFrame()
         self.window = QMainWindow()
         self.error_message = QErrorMessage()
+
         # store selected id
         self._selected_id = None
 
@@ -44,9 +45,10 @@ class LuxGUI():
 
         # When list widget item is clicked, display dialog
         self.list_widget.itemDoubleClicked.connect(self.callback_list_item)
+
         # install event filter for pressing enter in list widget item
-        # self.list_widget.itemPressed.connect(self.callback_list_item_enter)
         self.list_widget.keyPressEvent = self.callback_list_item_enter
+
         # Set layout on frame
         self.frame.setLayout(self.layout)
 
@@ -85,11 +87,6 @@ class LuxGUI():
         scroll_bar = QScrollBar()
         scroll_bar.setStyleSheet("background lightgreen;")
 
-        # Set the tab order for the labels and search button (TODO)
-        self.window.setTabOrder(self.label, self.classifier)
-        self.window.setTabOrder(self.classifier, self.agent)
-        self.window.setTabOrder(self.agent, self.department)
-        self.window.setTabOrder(self.department, search_button)
         self.original_keyPressEvent = self.window.keyPressEvent
         # set key press event
         self.window.keyPressEvent = self.on_enter
@@ -181,7 +178,11 @@ class LuxGUI():
 
         # call regular function if key is not return or else will handle it like double click
         if event.key() == Qt.Key.Key_Return:
-            self.callback_list_item(self.list_widget.selectedItems()[0])
+            try:
+                self.callback_list_item(self.list_widget.selectedItems()[0])
+            except:
+                self.error_message.showMessage("Please select a field!")
+
         else:
             super(QListWidget, self.list_widget).keyPressEvent(event)
 
@@ -242,7 +243,8 @@ class LuxGUI():
         dialog_item.exec()
 
     def on_enter(self, e):
-        """Function to detect if enter key is pressed. If the enter key is pressed it will execute callback_search.
+        """Function to detect if enter key is pressed. 
+        If the enter key is pressed it will execute callback_search if it's on on a list widget entry.
 
         Args:
             e: event
@@ -279,4 +281,7 @@ if __name__ == '__main__':
         exit(1)
 
     # initalizes the GUI
-    LuxGUI(host, port)
+    try:
+        LuxGUI(host, port)
+    except Exception as err:
+        print(f"The GUI has crashed: {err}", file=stderr)

@@ -31,6 +31,11 @@ class Query():
 
         raise NotImplementedError
 
+    def convert_to_json(self, data):
+        """Function to convert data to json"""
+
+        raise NotImplementedError
+
     def format_data(self, data):
         """Function used to format data."""
 
@@ -137,19 +142,9 @@ class LuxQuery(Query):
 
         return self.convert_to_json(search_count, data)
 
-    def split_part_agent(self, agent_part):
-        # get text parentheses
-        part_regex = r'\(([^)]*)\)'
-
-        agent = re.sub(part_regex, '', agent_part).strip(', ')
-        agent = re.sub(r'\s*,\s*', ',', agent)
-
-        part = re.findall(part_regex, agent_part)
-
-        return agent, ",".join(part)
-
     def convert_to_json(self, search_count, data):
         """Takes in the search_count and data and convert it to a json format
+        while parsing the data to split agent and part and switching object date and object agent.
 
         Args:
             search_count (int)
@@ -181,6 +176,30 @@ class LuxQuery(Query):
         }
 
         return json.dumps(database_response)
+
+    def split_part_agent(self, agent_part):
+        """RegEx to split the agent and part from the database into two seperates string.
+
+        Args:
+            agent_part (str): Agent, (Part)
+
+        Return:
+            (tuple) "Agent", "Part"
+        """
+
+        if not agent_part:
+            return "", ""
+
+        # get part
+        part_regex = r'\(([^)]*)\)'
+
+        # get agent
+        agent = re.sub(part_regex, '', agent_part).strip(', ')
+        agent = re.sub(r'\s*,\s*', ',', agent)
+
+        part = re.findall(part_regex, agent_part)
+
+        return agent, ",".join(part)
 
     def format_data(self, data):
         pass
