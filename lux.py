@@ -28,6 +28,8 @@ class LuxGUI():
         self.frame = QFrame()
         self.window = QMainWindow()
         self.error_message = QErrorMessage()
+        # store selected id
+        self._selected_id = None
 
         # self.search_results is a dictionary from json.loads()
         self.search_results = None
@@ -81,10 +83,17 @@ class LuxGUI():
         self.window.setTabOrder(self.agent, self.department)
         self.window.setTabOrder(self.department, search_button)
 
+        # set key press event
+        self.window.keyPressEvent = self.on_enter
+
         self.layout.addWidget(self.list_widget, 8, 0)
 
         self.window.show()
         exit(self.app.exec())
+
+    def on_enter(self, e):
+        if e.key() == Qt.Key.Key_Return:
+            self.callback_search()
 
     def callback_search(self):
         """Callback function that executes when user clicks search button.
@@ -115,9 +124,11 @@ class LuxGUI():
         # Refresh list widgets, in case we had previous search
         self.list_widget.clear()
         search_table = Table(self.search_results["columns"], self.search_results["data"], max_width = 100000000, format_str=['w', 'w', 'w', 'w', 'w', 'w'])
-        
-        for row in search_table:
-            self.list_widget.addItem(''.join(row))
+
+        for index, row in enumerate(search_table):
+            item = QListWidgetItem(''.join(row))
+            item.setData(Qt.UserRole, self.search_results["data"][index][0])
+            self.list_widget.addItem(item)
 
     def parse_label_data(self, line_edit_object):
         """Function used to fetch text data from QLineEdit object.
@@ -132,6 +143,7 @@ class LuxGUI():
         """Callback function for when list item is double clicked, display dialog."""
 
         # id, label, date
+
         selected_id = item.data(Qt.UserRole)
 
         data_dict = {"id": selected_id}
