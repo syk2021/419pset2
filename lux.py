@@ -7,10 +7,9 @@ import sys
 
 
 from socket import socket
-
 from PySide6.QtWidgets import QApplication, QFrame, QLabel, QListWidget
 from PySide6.QtWidgets import QMainWindow, QGridLayout, QPushButton, QLineEdit
-from PySide6.QtWidgets import QScrollBar, QListWidgetItem, QErrorMessage
+from PySide6.QtWidgets import QListWidgetItem, QErrorMessage
 from PySide6.QtCore import Qt
 
 from dialog import FW_FONT, FixedWidthMessageDialog
@@ -97,7 +96,7 @@ class LuxGUI():
 
         search_button = QPushButton("Search")
         self.layout.addWidget(search_button, 4, 1)
-        search_button.clicked.connect(lambda: self.callback_search())
+        search_button.clicked.connect(self.callback_search)
 
         # Sizing the screen
         screen_size = self.app.primaryScreen().availableGeometry()
