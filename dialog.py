@@ -1,9 +1,10 @@
 """Utilities file for a custom QDialog and a fixed-width font."""
 
+import sys
+
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QTextEdit, QVBoxLayout
 from PySide6.QtGui import QFont
 from PySide6.QtCore import Qt
-import sys
 
 # Named constant for a fixed-width font, Monaco (if it is available on the system).
 # Otherwise, it will pick a "TypeWriter" style with a fixed pitch.
@@ -49,7 +50,8 @@ class FixedWidthMessageDialog(QDialog):
         self.setLayout(self.layout)
 
     def keyPressEvent(self, event):
-        print("Dialog")
+        """Override key press event to close dialog for cmd + O on MAC and Enter on others"""
+
         if (event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_O
                 and sys.platform == "darwin"):
             print("Dialog Mac")
