@@ -221,7 +221,7 @@ class LuxGUI():
             except IndexError:
                 self.error_message.showMessage("Please select a field!")
         elif (event.key() == Qt.Key.Key_Return and Qt.Key.Key_Return
-              and (self._platform_os in ["Windows", "Linux"])):
+              and (self._platform_os in ["Windows", "Linux", "OS X"])):
             try:
                 self.callback_list_item(self.list_widget.selectedItems()[0])
             except IndexError:
@@ -262,7 +262,7 @@ class LuxGUI():
         res += str(Table(["Accession No.", "Label", "Date", "Place"],
                          [[str(selected_id), dialog_data_obj_dict['label'],
                            dialog_data_obj_dict['date'], dialog_data_obj_dict['place']]],
-                           max_width=150))
+                         max_width=150))
         # Produced By
         res += space_between_headers
         res += "Produced By\n"
@@ -303,7 +303,7 @@ class LuxGUI():
                 and event.key() == Qt.Key_O and self._platform_os == "OS X"):
             self.callback_search()
 
-        if event.key() == Qt.Key.Key_Return and (self._platform_os in ["Windows", "Linux"]):
+        if event.key() == Qt.Key.Key_Return and (self._platform_os in ["Windows", "Linux", "OS X"]):
             self.callback_search()
 
 
