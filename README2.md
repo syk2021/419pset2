@@ -57,11 +57,8 @@ For query.py, we have a pylint error that says too many local variables, but we 
 
 For luxserver.py, and lux.py we get a broad-exception-caught error. However, this is extended behavior as we are trying to exit the program safely we want to try to catch a general exception just in case. We have specific exception already when neccessary.
 
-For lux.py, we have too many instance attribute, however this is needed to make the GUI. We also have a lambda may not be necessary, but it's necessary to how the callback works. We also get a super error, for passing in QListWidget, but that is needed for the up and down arrow traversing in a list feature of our program. Finally, we get a redefining err_mess from outer
-
+For lux.py, we have too many instance attribute, however this is needed to make the GUI. We also have a lambda may not be necessary, but it's necessary to how the callback works. We also get a super error, for passing in QListWidget, but that is needed for the up and down arrow traversing in a list feature of our program.
 
 For all the files we might an import error. However, the import is correct as our program is running proprely so we believe this an error on pylint side.
 
 
-
-We have no errors for lux.py, luxdetails.py, and lux_query_sql.py.

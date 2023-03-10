@@ -220,8 +220,7 @@ class LuxGUI():
                 self.callback_list_item(self.list_widget.selectedItems()[0])
             except IndexError:
                 self.error_message.showMessage("Please select a field!")
-        elif (event.key() == Qt.Key.Key_Return and Qt.Key.Key_Return
-              and (self._platform_os in ["Windows", "Linux", "OS X"])):
+        elif event.key() in [Qt.Key.Key_Return, Qt.Key_Enter]:
             try:
                 self.callback_list_item(self.list_widget.selectedItems()[0])
             except IndexError:
@@ -302,8 +301,7 @@ class LuxGUI():
         if (event.modifiers() == Qt.ControlModifier
                 and event.key() == Qt.Key_O and self._platform_os == "OS X"):
             self.callback_search()
-
-        if event.key() == Qt.Key.Key_Return and (self._platform_os in ["Windows", "Linux", "OS X"]):
+        elif event.key() in [Qt.Key.Key_Return, Qt.Key_Enter]:
             self.callback_search()
 
 

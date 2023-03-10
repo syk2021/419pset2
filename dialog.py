@@ -2,12 +2,15 @@
 
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QTextEdit, QVBoxLayout
 from PySide6.QtGui import QFont
+from PySide6.QtCore import Qt
+import sys
 
 # Named constant for a fixed-width font, Monaco (if it is available on the system).
 # Otherwise, it will pick a "TypeWriter" style with a fixed pitch.
 FW_FONT = QFont("Monaco")
 FW_FONT.setStyleHint(QFont.StyleHint.TypeWriter)
 FW_FONT.setFixedPitch(True)
+
 
 class FixedWidthMessageDialog(QDialog):
     """Custom subclass of QDialog that displays a message in a fixed-width font and a single
@@ -44,3 +47,16 @@ class FixedWidthMessageDialog(QDialog):
 
         # Set self.layout to be the VBox layout containing the two widgets
         self.setLayout(self.layout)
+
+    def keyPressEvent(self, event):
+        print("Dialog")
+        if (event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_O
+                and sys.platform == "darwin"):
+            print("Dialog Mac")
+            self.accept()
+        elif (event.key() in [Qt.Key.Key_Return, Qt.Key_Enter]):
+            print("Enter")
+            self.accept()
+        else:
+            print("Other")
+            super().keyPressEvent(event)
