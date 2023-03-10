@@ -106,8 +106,6 @@ class LuxGUI():
 
         # List of responses we get back
         self.layout.addWidget(self.list_widget, 8, 0)
-        scroll_bar = QScrollBar()
-        scroll_bar.setStyleSheet("background lightgreen;")
 
         # self.original_keyPressEvent = self.window.keyPressEvent
         # set key press event
@@ -196,6 +194,8 @@ class LuxGUI():
         # Now show the search results
         # Refresh list widgets, in case we had previous search
         self.list_widget.clear()
+        print(self.search_results["data"])
+        # switch order of nationalities and timespan
         search_table = Table(self.search_results["columns"], self.search_results["data"],
                              max_width=float('inf'), format_str=['w', 'w', 'w', 'w', 'w'])
 
@@ -262,13 +262,14 @@ class LuxGUI():
         res += "Object Information\n"
         res += str(Table(["Accession No.", "Label", "Date", "Place"],
                          [[str(selected_id), dialog_data_obj_dict['label'],
-                           dialog_data_obj_dict['date'], dialog_data_obj_dict['place']]]))
+                           dialog_data_obj_dict['date'], dialog_data_obj_dict['place']]],
+                           max_width=150))
         # Produced By
         res += space_between_headers
         res += "Produced By\n"
 
         res += str(Table(["Part", "Name", "Nationalities",
-                   "Timespan"], dialog_data_agt_dict))
+                   "Timespan"], dialog_data_agt_dict, max_width=150))
 
         # Classification
         res += space_between_headers
@@ -283,7 +284,7 @@ class LuxGUI():
         for index, ref_type in enumerate(dialog_data_obj_dict['ref_type']):
             ref_rows.append(
                 [ref_type, dialog_data_obj_dict['ref_content'][index]])
-        res += str(Table(['Type', 'Content'], ref_rows))
+        res += str(Table(['Type', 'Content'], ref_rows, max_width=150))
 
         # Display dialog item
         dialog_item = FixedWidthMessageDialog("Title", res)
