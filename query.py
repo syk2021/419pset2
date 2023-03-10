@@ -1,6 +1,5 @@
 """Module handling queries for the database."""
 
-import re
 import json
 
 from contextlib import closing
@@ -369,6 +368,7 @@ class LuxDetailsQuery(Query):
                         obj_dict['ref_type'].pop()
 
             # if agent has not been stored in agent_dict yet
+
             if agent_id not in agent_dict:
                 agent_dict[agent_id] = {
                     "part": part_produced,

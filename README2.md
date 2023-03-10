@@ -1,3 +1,5 @@
+# Pset 2: Desktop GUI Application
+
 # CPSC 419 PSET 2 PARTNER GROUP 9
 
 Group members: Sophia Kang (yk575), Phuc Duong (phd24)

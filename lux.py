@@ -1,8 +1,10 @@
 """Module for the GUI client side of the application."""
 
 import json
+from json import JSONDecodeError
 import argparse
 import sys
+
 
 from socket import socket
 
@@ -15,24 +17,34 @@ from dialog import FW_FONT, FixedWidthMessageDialog
 from table import Table
 
 
-class InvalidPort(Exception):
+class InvalidPortError(Exception):
     """Exception class to handle invalid port."""
+
+
+class SearchingError(Exception):
+    """Exception  class when server fail to get a valid response from database"""
+
+    def __init__(self, error_type):
+        super().__init__()
+        self.err = error_type
 
 
 class LuxGUI():
     """A GUI class for Lux."""
 
-    def __init__(self, server_host, server_port):
-        """Initalizes the GUI with the given host and port 
+    def __init__(self, server_host, server_port, platform_os):
+        """Initalizes the GUI with the given host and port
         and creates the neccessary widgets and frame for the GUI.
 
         Args:
             host (str): host to connect to
             port (int): port to connect to
+            platform_os (str): OS of user
         """
 
         self._host = server_host
         self._port = server_port
+        self._platform_os = platform_os
 
         self.app = QApplication(sys.argv)
         self.label = QLineEdit()
@@ -127,7 +139,12 @@ class LuxGUI():
             in_flo = sock.makefile(mode='r', encoding='utf-8')
             response = in_flo.readline()
 
-        return json.loads(response)
+        try:
+            response = json.loads(response)
+        except JSONDecodeError as json_error:
+            raise SearchingError(response) from json_error
+
+        return response
 
     def parse_label_data(self, line_edit_object):
         """Function used to fetch text data from QLineEdit object.
@@ -147,7 +164,7 @@ class LuxGUI():
 
     def callback_search(self):
         """Callback function that executes when user clicks search button.
-        It connect to server with the inputted arguments, 
+        It connect to server with the inputted arguments,
         retrieves the data from the server, and parse the data returned.
         """
 
@@ -162,6 +179,9 @@ class LuxGUI():
         # Connect to the server and get back the results
         try:
             self.search_results = self.connect_to_server(json.dumps(data_dict))
+        except SearchingError as err:
+            self.error_message.showMessage(str(err.err))
+            return
         except Exception as err:
             self.error_message.showMessage(str(err))
             return
@@ -176,7 +196,7 @@ class LuxGUI():
         # Refresh list widgets, in case we had previous search
         self.list_widget.clear()
         search_table = Table(self.search_results["columns"], self.search_results["data"],
-                             max_width=100000000, format_str=['w', 'w', 'w', 'w', 'w'])
+                             max_width=float('inf'), format_str=['w', 'w', 'w', 'w', 'w'])
 
         for index, row in enumerate(search_table):
             item = QListWidgetItem(''.join(row))
@@ -193,12 +213,17 @@ class LuxGUI():
         """
 
         # call regular function if key is not return or else will handle it like double click
-        if event.key() == Qt.Key.Key_Return:
+        if event.key() == Qt.Key.Key_Return and self._platform_os == "OS X":
             try:
                 self.callback_list_item(self.list_widget.selectedItems()[0])
             except IndexError:
                 self.error_message.showMessage("Please select a field!")
-
+        elif event.key() == Qt.Key.Key_Return and (self._platform_os == "Windows" or
+                                                   self._platform_os == "Linux"):
+            try:
+                self.callback_list_item(self.list_widget.selectedItems()[0])
+            except IndexError:
+                self.error_message.showMessage("Please select a field!")
         else:
             super(QListWidget, self.list_widget).keyPressEvent(event)
 
@@ -217,6 +242,9 @@ class LuxGUI():
         # dialog_data is a dictionary
         try:
             dialog_data = self.connect_to_server(json.dumps(data_dict))
+        except SearchingError as err:
+            self.error_message.showMessage(str(err.err))
+            return
         except Exception as err_message:
             self.error_message.showMessage(str(err_message))
             return
@@ -235,9 +263,9 @@ class LuxGUI():
         # Produced By
         res += space_between_headers
         res += "Produced By\n"
-        res += str(Table(["Part", "Name", "Nationalities", "Timespan"],
-                         [[dialog_data_agt_dict[0][0], dialog_data_agt_dict[0][1],
-                           dialog_data_agt_dict[0][3], dialog_data_agt_dict[0][2]]]))
+
+        res += str(Table(["Part", "Name", "Nationalities",
+                   "Timespan"], dialog_data_agt_dict))
 
         # Classification
         res += space_between_headers
@@ -268,11 +296,22 @@ class LuxGUI():
             e: event
         """
 
-        if event.key() == Qt.Key.Key_Return:
+        if event.key() == Qt.Key.Key_Return and self._platform_os == "OS X":
+            self.callback_search()
+
+        if event.key() == Qt.Key.Key_Return and (self._platform_os == "Windows" or self._platform_os == "Linux"):
             self.callback_search()
 
 
 if __name__ == '__main__':
+
+    # platform
+    platforms = {
+        'linux1': 'Linux',
+        'linux2': 'Linux',
+        'darwin': 'OS X',
+        'win32': 'Windows'
+    }
 
     # parse the data
     parser = argparse.ArgumentParser(
@@ -293,16 +332,16 @@ if __name__ == '__main__':
     try:
         port = int(port)
         if port < 0 or port > 65535:
-            raise InvalidPort
-    except InvalidPort:
-        print("error: port must be an integer 0-65535", file=sys.stderr)
-        sys.exit(1)
+            raise InvalidPortError
     except Exception as error_message:
-        print(f"error: {error_message}", file=sys.stderr)
+        print("error: port must be an integer 0-65535", file=sys.stderr)
         sys.exit(1)
 
     # initalizes the GUI
     try:
-        LuxGUI(host, port)
+        LuxGUI(host, port, platforms[sys.platform])
     except Exception as err_mess:
         print(f"The GUI has crashed: {err_mess}", file=sys.stderr)
+
+# conform to standards
+# sort luxdetails

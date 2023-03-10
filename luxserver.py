@@ -142,7 +142,7 @@ if __name__ == '__main__':
     try:
         Server(port)
     except Exception as err_message:
-        print("The server has crashed, error: ", err_mess, file=sys.stderr)
+        print("The server has crashed, error: ", err_message, file=sys.stderr)
         sys.exit(1)
     except KeyboardInterrupt:
         print("\nProcess: Killing Server")
