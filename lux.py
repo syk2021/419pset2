@@ -344,5 +344,3 @@ if __name__ == '__main__':
         LuxGUI(host, port, platforms[sys.platform])
     except Exception as err_mess:
         print(f"The GUI has crashed: {err_mess}", file=sys.stderr)
-
-# sort luxdetails
