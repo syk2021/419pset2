@@ -246,10 +246,50 @@ class LuxDetailsQuery(Query):
                 if not data:
                     raise NoSearchResultsError
 
-        # data formatting
+        # data cleaning
         agent_dict, obj_dict = self.clean_data(data)
+
+        # sort ordering
+        obj_dict['classifier'].sort()
+
+        obj_dict['ref_type'], obj_dict['ref_content'] = self.sort_by_order_ref(
+            obj_dict['ref_type'], obj_dict['ref_content'])
+
+        # sorting agents
+        sorted_agents = sorted(agent_dict.items(), key=lambda x: (
+            x[1]['name'], x[1]['part'], sorted(x[1]['nationality']), x[1]['timespan']))
+
+        sorted_agent_dict = {}
+        for attributes, val in sorted_agents:
+            sorted_agent_dict[attributes] = {
+                'part': val['part'], 'name': val['name'], 'nationality': val['nationality'], 'timespan': val['timespan']}
+
+        agent_dict = sorted_agent_dict
+
+        # data formatting
         agent_rows_list = self.format_data(agent_dict)
         return self.convert_to_json(agent_rows_list, obj_dict)
+
+    def sort_by_order_ref(self, x_data, y_data):
+        """Function that sort the references by type and content
+
+        Args:
+            x_data (list)
+            y_data (list)
+
+        Return:
+            2 lists where x[0], y[0] pair up
+        """
+
+        combined = []
+        for i in range(len(x_data)):
+            combined.append((x_data[i], y_data[i]))
+        combined.sort(key=lambda x: (x[0], x[1]))
+
+        x_data = [t[0] for t in combined]
+        y_data = [t[1] for t in combined]
+
+        return x_data, y_data
 
     def convert_to_json(self, data1, data2):
         """Takes in the search_count and data and convert it to a json format
@@ -296,7 +336,8 @@ class LuxDetailsQuery(Query):
 
             # join appropriate strings together
             if data[key]["nationality"] and data[key]["nationality"][0]:
-                data[key]["nationality"] = "|".join(data[key]["nationality"])
+                data[key]["nationality"].sort()
+                data[key]["nationality"] = ", ".join(data[key]["nationality"])
             else:
                 data[key]["nationality"] = ""
 

@@ -54,6 +54,7 @@ class LuxGUI():
         self.layout = QGridLayout()
         self.frame = QFrame()
         self.window = QMainWindow()
+        self.window.setWindowTitle("YUAG Application")
         self.error_message = QErrorMessage()
 
         # store selected id
@@ -204,7 +205,8 @@ class LuxGUI():
             self.list_widget.addItem(item)
 
     def callback_list_item_enter(self, event):
-        """Callback function for the list widget item that checks if the key press is enter. 
+        """Callback function for the list widget item that checks if the key press is enter 
+        (command + O for Mac). 
         if so, it will treat it as if the item is double clicked.
         If the event is not enter, then it will treat the key press as normal.
 
@@ -213,13 +215,14 @@ class LuxGUI():
         """
 
         # call regular function if key is not return or else will handle it like double click
-        if event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_O and self._platform_os == "OS X":
+        if (event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_O
+                and self._platform_os == "OS X"):
             try:
                 self.callback_list_item(self.list_widget.selectedItems()[0])
             except IndexError:
                 self.error_message.showMessage("Please select a field!")
-        elif event.key() == Qt.Key.Key_Return and (self._platform_os == "Windows" or
-                                                   self._platform_os == "Linux"):
+        elif (event.key() == Qt.Key.Key_Return and Qt.Key.Key_Return
+              and (self._platform_os in ["Windows", "Linux"])):
             try:
                 self.callback_list_item(self.list_widget.selectedItems()[0])
             except IndexError:
@@ -289,17 +292,18 @@ class LuxGUI():
 
     def on_enter(self, event):
         """Function to detect if enter key is pressed. 
-        If the enter key is pressed it will execute callback_search 
+        If the enter (command + O for Mac) key is pressed it will execute callback_search 
         if it's on on a list widget entry.
 
         Args:
             e: event
         """
 
-        if event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_O and self._platform_os == "OS X":
+        if (event.modifiers() == Qt.ControlModifier
+                and event.key() == Qt.Key_O and self._platform_os == "OS X"):
             self.callback_search()
 
-        if event.key() == Qt.Key.Key_Return and (self._platform_os == "Windows" or self._platform_os == "Linux"):
+        if event.key() == Qt.Key.Key_Return and (self._platform_os in ["Windows", "Linux"]):
             self.callback_search()
 
 
@@ -343,5 +347,4 @@ if __name__ == '__main__':
     except Exception as err_mess:
         print(f"The GUI has crashed: {err_mess}", file=sys.stderr)
 
-# conform to standards
 # sort luxdetails
