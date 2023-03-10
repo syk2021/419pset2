@@ -262,7 +262,8 @@ class LuxDetailsQuery(Query):
         sorted_agent_dict = {}
         for attributes, val in sorted_agents:
             sorted_agent_dict[attributes] = {
-                'part': val['part'], 'name': val['name'], 'nationality': val['nationality'], 'timespan': val['timespan']}
+                'part': val['part'], 'name': val['name'],
+                'nationality': val['nationality'], 'timespan': val['timespan']}
 
         agent_dict = sorted_agent_dict
 
@@ -282,8 +283,8 @@ class LuxDetailsQuery(Query):
         """
 
         combined = []
-        for i in range(len(x_data)):
-            combined.append((x_data[i], y_data[i]))
+        for index, x_data_item in enumerate(x_data):
+            combined.append((x_data_item, y_data[index]))
         combined.sort(key=lambda x: (x[0], x[1]))
 
         x_data = [t[0] for t in combined]
