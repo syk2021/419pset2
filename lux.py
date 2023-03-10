@@ -213,7 +213,7 @@ class LuxGUI():
         """
 
         # call regular function if key is not return or else will handle it like double click
-        if event.key() == Qt.Key.Key_Return and self._platform_os == "OS X":
+        if event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_O and self._platform_os == "OS X":
             try:
                 self.callback_list_item(self.list_widget.selectedItems()[0])
             except IndexError:
@@ -296,7 +296,7 @@ class LuxGUI():
             e: event
         """
 
-        if event.key() == Qt.Key.Key_Return and self._platform_os == "OS X":
+        if event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_O and self._platform_os == "OS X":
             self.callback_search()
 
         if event.key() == Qt.Key.Key_Return and (self._platform_os == "Windows" or self._platform_os == "Linux"):
