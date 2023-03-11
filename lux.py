@@ -193,7 +193,6 @@ class LuxGUI():
         # Now show the search results
         # Refresh list widgets, in case we had previous search
         self.list_widget.clear()
-        print(self.search_results["data"])
         # switch order of nationalities and timespan
         search_table = Table(self.search_results["columns"], self.search_results["data"],
                              max_width=float('inf'), format_str=['w', 'w', 'w', 'w', 'w'])
